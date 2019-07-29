@@ -1,0 +1,7 @@
+firebase-admin
+google.cloud
+PyJWT==1.7.1
+passlib
+flask
+gcloud
+gunicorn
