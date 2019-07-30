@@ -69,3 +69,161 @@ class User(object):
         return dest
 
 # [END User def]
+
+# [START Option def]
+class Option(object):
+   
+    def __init__(self, index, option):
+        self.index = index
+        self.option = option
+
+
+    @staticmethod
+    def from_dict(source):
+        option = Option(source['index'], source['option'])
+
+        return option
+    
+    def to_dict(self):
+
+        dest = {
+                'index' : self.index,
+                'option' : self.option
+            }
+            
+        print('optionDict dest : ', dest)
+
+        return dest
+
+# [END Option def]
+
+# [START Question def]
+class Question(object):
+   
+    def __init__(self, question, options, correctAnswer, maxAllowedTime):
+        
+        self.question = question
+        self.options = options
+        self.correctAnswer = correctAnswer
+        self.maxAllowedTime = maxAllowedTime
+
+    @staticmethod
+    def from_dict(source):
+
+        optionsArray = source['options']
+        options = []
+
+        for optionDict in optionsArray:
+            # print('optionDict : ', optionDict)
+
+            option = Option.from_dict(optionDict)
+            options.append(option)
+
+        # print('options : ', options)
+
+        question = Question(source['question'], options, source['correctAnswer'], source['maxAllowedTime'])
+
+        # print('question : ', question)
+
+        return question
+    
+    def to_dict(self):
+
+        optionsDicts = []
+        for option in self.options:
+            optionsDicts.append(option.to_dict())
+
+        print('optionsDicts : ', optionsDicts)
+
+
+        dest = {
+                'question' : self.question,
+                'options' : optionsDicts,
+                'correctAnswer' : self.correctAnswer,
+                'maxAllowedTime' : self.maxAllowedTime or ''
+            }
+
+        return dest
+
+# [END Question def]
+
+# [START Subject def]
+class Subject(object):
+   
+    def __init__(self, id, subject, questions, status='NEW', sysState='OPEN', dateCreated='', dateEdited='', createdBy='', editedBy=''):
+        
+        self.id = id
+        self.subject = subject
+        self.questions = questions
+        self.status = status
+        self.sysState = sysState
+        self.dateCreated = dateCreated
+        self.dateEdited = dateEdited
+        self.createdBy = createdBy
+        self.editedBy = editedBy
+
+    @staticmethod
+    def from_dict(source):
+
+        questionsArray = source['questions']
+
+        questions = []
+
+        for questionDict in questionsArray:
+            print('questionDict : ', questionDict)
+            question = Question.from_dict(questionDict)
+            questions.append(question)
+
+        # print('questions : ', questions)
+
+        # print('---- source : ', source)
+
+        subject = Subject(source['id'], source['subject'], questions)
+    
+        if 'status' in source:
+            subject.status = source['status']
+        
+        if 'sysState' in source:
+            subject.sysState = source['sysState']
+        
+        if 'dateCreated' in source:
+            subject.dateCreated = source['dateCreated']
+        
+        if 'dateEdited' in source:
+            subject.dateEdited = source['dateEdited']
+
+        if 'createdBy' in source:
+            subject.createdBy = source['createdBy']
+
+        if 'editedBy' in source:
+            subject.editedBy = source['editedBy']
+
+        print('subject : ', subject)
+
+        return subject
+    
+    def to_dict(self):
+        print('---- self : ', self)
+        print('---- questions : ', self.questions)
+
+        questionsDicts = []
+        for question in self.questions:
+            questionsDicts.append(question.to_dict())
+
+        print('---- questionsDicts : ', questionsDicts)
+
+        dest = {
+                'id' : self.id,
+                'subject' : self.subject,
+                'questions' : questionsDicts,
+                'status' : self.status or '',
+                'sysState' : self.sysState or '',
+                'dateCreated' : self.dateCreated or '',
+                'dateEdited' : self.dateEdited or '',
+                'createdBy' : self.createdBy or '',
+                'editedBy' : self.editedBy or ''
+            }
+
+        return dest
+
+# [END Subject def]

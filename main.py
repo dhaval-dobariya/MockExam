@@ -18,7 +18,6 @@ db = firestore.Client()
 
 usersCollectionRef = db.collection('users')
 
-
 # New user signup
 def newUserSignUp(request):
 
@@ -174,3 +173,5 @@ def login(request):
                          'status': 301,
                          'message': 'Something went wrong!!'
                          })
+
+

@@ -1,22 +1,28 @@
 import flask
-from main import newUserSignUp
-from main import login
-from authenticate import refreshAuthToken
+import main
+import authenticate
+import subject
 
 app = flask.Flask('functions')
 
 @app.route('/newUserSignUp', methods=['POST'])
 def registerUser():
-    return newUserSignUp(flask.request)
+    return main.newUserSignUp(flask.request)
 
 @app.route('/login', methods=['POST'])
 def loginUser():
-    return login(flask.request)
+    return main.login(flask.request)
 
 @app.route('/refreshAuthToken', methods=['POST'])
 def refreshToken():
-    return refreshAuthToken(flask.request)
+    return authenticate.refreshAuthToken(flask.request)
 
+@app.route('/subject', methods=['GET','POST'])
+def subjects():
+    if flask.request.method == 'POST':
+        return subject.createSubject(flask.request)
+    elif flask.request.method == 'GET':
+        return subject.getSubjects()
 
 if __name__ == '__main__':
     app.run()
