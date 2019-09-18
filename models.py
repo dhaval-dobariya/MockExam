@@ -1,12 +1,15 @@
+from google.cloud import firestore
+
 # [START User def]
 class User(object):
    
-    def __init__(self, id, firstName, lastName, email, password='', userId='', status='NEW', sysState='OPEN', dateCreated='', dateEdited='', createdBy='', editedBy=''):
+    def __init__(self, id, firstName, lastName, email, location = firestore.GeoPoint(0.0 ,0.0), password='', userId='', status='NEW', sysState='OPEN', dateCreated='', dateEdited='', createdBy='', editedBy=''):
         
         self.id = id
         self.firstName = firstName
         self.lastName = lastName
         self.email = email
+        self.location = location
         self.password = password
         self.userId = userId
         self.status = status
@@ -21,6 +24,9 @@ class User(object):
 
         user = User(source['id'], source['firstName'], source['lastName'], source['email'])
     
+        if 'location' in source:
+            user.location = source['location']
+
         if 'password' in source:
             user.password = source['password']
 
@@ -54,6 +60,7 @@ class User(object):
                 'firstName' : self.firstName,
                 'lastName' : self.lastName,
                 'email' : self.email,
+                'location' : self.location,
                 'userId' : self.userId or '',
                 'status' : self.status or '',
                 'sysState' : self.sysState or '',

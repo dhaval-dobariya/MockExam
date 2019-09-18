@@ -64,11 +64,16 @@ def newUserSignUp(request):
             user = User.from_dict(request.json)
             print("user ", user)
 
+            if "location" in request.json:
+                print("lat ", request.json['location']['lat'])
+                print("long ", request.json['location']['long'])
+                user.location = firestore.GeoPoint(request.json['location']['lat'], request.json['location']['long'])
+
             user.password = passwordHash
             user.dateCreated = firestore.SERVER_TIMESTAMP
             user.createdBy = user.email
             user.userId = user.email
-            print("user ", user.to_dict())
+            print("user to_dict ", user.to_dict())
 
             domain = user.email.split('@')[1] 
             print("domain ", domain)
