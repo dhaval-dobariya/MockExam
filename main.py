@@ -179,4 +179,30 @@ def login(request):
                          'message': 'Something went wrong!!'
                          })
 
+# Get all nearby users
+def getUsers(request):
+    
+    try:
 
+        docs = usersCollectionRef.where('sysState', '==', 'OPEN').limit(20).get()
+
+        users = []
+        for doc in docs:
+            user = User.from_dict(doc.to_dict())
+            users.append(user.to_dict(isRequireLatLongDict = True))
+
+        if users is not None:
+
+            return flask.jsonify({
+                         'status': 200,
+                         'data': users,
+                         'message': 'Users details successfully retrived!!'
+                         })
+        else:
+            return flask.jsonify({
+                         'message': 'Users not found!!'
+                         })
+    except:
+        return flask.jsonify({
+                         'message': 'Something went wrong!!'
+                         })

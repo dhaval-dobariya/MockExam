@@ -53,14 +53,13 @@ class User(object):
 
         return user
     
-    def to_dict(self, includePassword = False):
+    def to_dict(self, isRequireLatLongDict = False, includePassword = False):
 
         dest = {
                 'id' : self.id,
                 'firstName' : self.firstName,
                 'lastName' : self.lastName,
                 'email' : self.email,
-                'location' : self.location,
                 'userId' : self.userId or '',
                 'status' : self.status or '',
                 'sysState' : self.sysState or '',
@@ -69,6 +68,13 @@ class User(object):
                 'createdBy' : self.createdBy or '',
                 'editedBy' : self.editedBy or ''
             }
+
+        if isRequireLatLongDict:
+            dest['location'] = {
+                    'lat' : self.location.latitude,
+                    'long': self.location.longitude
+                } 
+
 
         if includePassword:
             dest['password'] = self.password

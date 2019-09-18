@@ -13,6 +13,11 @@ def registerUser():
 def loginUser():
     return main.login(flask.request)
 
+@app.route('/getNearByUsers', methods=['GET'])
+def getSuroundingUsers():
+    return main.getUsers(flask.request)
+
+
 @app.route('/refreshAuthToken', methods=['POST'])
 def refreshToken():
     return authenticate.refreshAuthToken(flask.request)
