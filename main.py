@@ -12,6 +12,9 @@ from authenticate import refreshAuthToken
 from authenticate import generateAuthToken
 from authenticate import generateRefreshToken
 from models import User
+import pygeohash as pgh
+import math
+from geolocation import GeoLocation
 
 # Project ID is determined by the GCLOUD_PROJECT environment variable
 db = firestore.Client()
@@ -65,20 +68,24 @@ def newUserSignUp(request):
             print("user ", user)
 
             if "location" in request.json:
-                print("lat ", request.json['location']['lat'])
-                print("long ", request.json['location']['long'])
-                user.location = firestore.GeoPoint(request.json['location']['lat'], request.json['location']['long'])
+                lat = request.json['location']['lat']
+                long = request.json['location']['long']
+                print("lat ", lat)
+                print("long ", long)
+                user.location = firestore.GeoPoint(lat, long)
+                user.geohash = pgh.encode(lat, long)
+
 
             user.password = passwordHash
             user.dateCreated = firestore.SERVER_TIMESTAMP
             user.createdBy = user.email
             user.userId = user.email
-            print("user to_dict ", user.to_dict())
+            print("user to_dict ", user.to_dict(isRequireGeoPoint=True, includePassword=True))
 
             domain = user.email.split('@')[1] 
             print("domain ", domain)
 
-            userDict = user.to_dict(includePassword=True)
+            userDict = user.to_dict(isRequireGeoPoint=True, includePassword=True)
 
             # Add user to Firestore
             usersCollectionRef.document(newDocId).set(userDict)
@@ -183,13 +190,55 @@ def login(request):
 def getUsers(request):
     
     try:
+        # ~1 mile of lat and lon in degrees
+        lat = 0.0144927536231884
+        lon = 0.0181818181818182
+        distance = request.json["distance"]
 
-        docs = usersCollectionRef.where('sysState', '==', 'OPEN').limit(20).get()
+        if "location" in request.json:
+            latitude = request.json["location"]["lat"]
+            longitude = request.json["location"]["long"]
+
+        lowerLat = latitude - (lat * distance)
+        lowerLon = longitude - (lon * distance)
+
+        greaterLat = latitude + (lat * distance)
+        greaterLon = longitude + (lon * distance)
+
+        print("lowerLat lowerLon", lowerLat, lowerLon)  
+        print("greaterLat greaterLon", greaterLat, greaterLon)  
+
+        lesserGeopoint = firestore.GeoPoint(lowerLat, lowerLon)
+        greaterGeopoint = firestore.GeoPoint(greaterLat, greaterLon)
+
+        lesserGeoHash = pgh.encode(lowerLat, lowerLon, precision=5)
+        greaterGeoHash = pgh.encode(greaterLat, greaterLon, precision=5)
+
+        print("lesserGeoHash ", lesserGeoHash)            
+        print("greaterGeoHash ", greaterGeoHash)            
+
+        userQueryRef = usersCollectionRef
+        userQueryRef = userQueryRef.where('sysState', '==', 'OPEN')
+        # userQueryRef.where('location', '>', lesserGeopoint).where('location', '<', greaterGeopoint)
+
+        userQueryRef = userQueryRef.where('geohash', '>=', lesserGeoHash).where('geohash', '<', greaterGeoHash)
+        userQueryRef = userQueryRef.order_by('geohash')
+
+        docs = userQueryRef.limit(20).get()
 
         users = []
         for doc in docs:
             user = User.from_dict(doc.to_dict())
-            users.append(user.to_dict(isRequireLatLongDict = True))
+
+            # To Filter out extra results 
+            userLatLong = GeoLocation.from_degrees(user.location.latitude, user.location.longitude)
+            requestedUserLatLong = GeoLocation.from_degrees(latitude, longitude)
+            distanceBetweenUsers = userLatLong.distance_to(requestedUserLatLong)
+            print("distanceBetweenUsers ", distanceBetweenUsers)
+            print("user.geohash ", user.geohash)
+
+            if distanceBetweenUsers <= distance:
+                users.append(user.to_dict(isRequireLatLongDict = True))
 
         if users is not None:
 
@@ -202,7 +251,9 @@ def getUsers(request):
             return flask.jsonify({
                          'message': 'Users not found!!'
                          })
-    except:
+    except Exception as e:
         return flask.jsonify({
-                         'message': 'Something went wrong!!'
+                         'message': 'Something went wrong!!' + str(e)
                          })
+
+

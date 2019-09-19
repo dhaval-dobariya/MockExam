@@ -3,13 +3,14 @@ from google.cloud import firestore
 # [START User def]
 class User(object):
    
-    def __init__(self, id, firstName, lastName, email, location = firestore.GeoPoint(0.0 ,0.0), password='', userId='', status='NEW', sysState='OPEN', dateCreated='', dateEdited='', createdBy='', editedBy=''):
+    def __init__(self, id, firstName, lastName, email, location = firestore.GeoPoint(0.0 ,0.0), geohash='', password='', userId='', status='NEW', sysState='OPEN', dateCreated='', dateEdited='', createdBy='', editedBy=''):
         
         self.id = id
         self.firstName = firstName
         self.lastName = lastName
         self.email = email
         self.location = location
+        self.geohash = geohash
         self.password = password
         self.userId = userId
         self.status = status
@@ -26,6 +27,9 @@ class User(object):
     
         if 'location' in source:
             user.location = source['location']
+
+        if 'geohash' in source:
+            user.geohash = source['geohash']
 
         if 'password' in source:
             user.password = source['password']
@@ -53,13 +57,14 @@ class User(object):
 
         return user
     
-    def to_dict(self, isRequireLatLongDict = False, includePassword = False):
+    def to_dict(self, isRequireGeoPoint = False, isRequireLatLongDict = False, includePassword = False):
 
         dest = {
                 'id' : self.id,
                 'firstName' : self.firstName,
                 'lastName' : self.lastName,
                 'email' : self.email,
+                'geohash' : self.geohash,
                 'userId' : self.userId or '',
                 'status' : self.status or '',
                 'sysState' : self.sysState or '',
@@ -74,7 +79,8 @@ class User(object):
                     'lat' : self.location.latitude,
                     'long': self.location.longitude
                 } 
-
+        elif isRequireGeoPoint:
+            dest['location'] = self.location
 
         if includePassword:
             dest['password'] = self.password

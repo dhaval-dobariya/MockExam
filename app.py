@@ -13,7 +13,7 @@ def registerUser():
 def loginUser():
     return main.login(flask.request)
 
-@app.route('/getNearByUsers', methods=['GET'])
+@app.route('/getNearByUsers', methods=['POST'])
 def getSuroundingUsers():
     return main.getUsers(flask.request)
 
